@@ -335,12 +335,12 @@
         const fmt = d => { if (!d) return '—'; const dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) };
 
         const CARD_DEFS = [
-            { key: 'marketing_ideas', label: 'Marketing Ideas', color: 'var(--purple)', bg: 'var(--purple-light)', tc: 'var(--purple-text)', dateField: 'scheduled_date', dateName: 'Scheduled Date' },
-            { key: 'completed_tasks', label: 'Completed Marketing Tasks', color: 'var(--green)', bg: 'var(--green-light)', tc: 'var(--green-text)', dateField: 'completed_date', dateName: 'Completed Date' },
+            { key: 'marketing_ideas', label: 'Marketing Ideas', color: 'var(--purple)', bg: 'var(--purple-light)', tc: 'var(--purple-text)', dateField: 'date_value', dateName: 'Scheduled Date' },
+            { key: 'completed_tasks', label: 'Completed Marketing Tasks', color: 'var(--green)', bg: 'var(--green-light)', tc: 'var(--green-text)', dateField: 'date_value', dateName: 'Completed Date' },
             { key: 'portfolio', label: 'Portfolio', color: 'var(--coral)', bg: 'var(--coral-light)', tc: 'var(--coral-text)' },
             { key: 'ideas', label: 'Ideas', color: 'var(--rose)', bg: 'var(--rose-light)', tc: 'var(--rose-text)' },
-            { key: 'new_projects', label: 'New Projects', color: 'var(--blue)', bg: 'var(--blue-light)', tc: 'var(--blue-text)', dateField: 'deadline', dateName: 'Deadline' },
-            { key: 'new_implementations', label: 'New Implementations', color: 'var(--lime)', bg: 'var(--lime-light)', tc: 'var(--lime-text)', dateField: 'deadline', dateName: 'Deadline' },
+            { key: 'new_projects', label: 'New Projects', color: 'var(--blue)', bg: 'var(--blue-light)', tc: 'var(--blue-text)', dateField: 'date_value', dateName: 'Deadline' },
+            { key: 'new_implementations', label: 'New Implementations', color: 'var(--lime)', bg: 'var(--lime-light)', tc: 'var(--lime-text)', dateField: 'date_value', dateName: 'Deadline' },
             { key: 'recruiting', label: 'Recruiting', color: 'var(--amber)', bg: 'var(--amber-light)', tc: 'var(--amber-text)' },
             { key: 'collaborations', label: 'Collaborations', color: 'var(--teal)', bg: 'var(--teal-light)', tc: 'var(--teal-text)' },
             { key: 'clients', label: 'Clients', color: 'var(--purple)', bg: 'var(--purple-light)', tc: 'var(--purple-text)' },
@@ -348,11 +348,11 @@
         ];
 
         const PROJ_SECTIONS = [
-            { key: 'tasks', label: 'Tasks', dateField: 'deadline', dateName: 'Deadline', color: 'var(--purple)', bg: 'var(--purple-light)', tc: 'var(--purple-text)' },
-            { key: 'improvements', label: 'Improvements', dateField: 'deadline', dateName: 'Deadline', color: 'var(--green)', bg: 'var(--green-light)', tc: 'var(--green-text)' },
-            { key: 'new_features', label: 'New Features', dateField: 'deadline', dateName: 'Deadline', color: 'var(--blue)', bg: 'var(--blue-light)', tc: 'var(--blue-text)' },
+            { key: 'tasks', label: 'Tasks', dateField: 'date_value', dateName: 'Deadline', color: 'var(--purple)', bg: 'var(--purple-light)', tc: 'var(--purple-text)' },
+            { key: 'improvements', label: 'Improvements', dateField: 'date_value', dateName: 'Deadline', color: 'var(--green)', bg: 'var(--green-light)', tc: 'var(--green-text)' },
+            { key: 'new_features', label: 'New Features', dateField: 'date_value', dateName: 'Deadline', color: 'var(--blue)', bg: 'var(--blue-light)', tc: 'var(--blue-text)' },
             { key: 'ideas', label: 'Ideas', color: 'var(--rose)', bg: 'var(--rose-light)', tc: 'var(--rose-text)' },
-            { key: 'bugs', label: 'Bugs', dateField: 'solved_date', dateName: 'Solved Date', color: 'var(--coral)', bg: 'var(--coral-light)', tc: 'var(--coral-text)' },
+            { key: 'bugs', label: 'Bugs', dateField: 'date_value', dateName: 'Solved Date', color: 'var(--coral)', bg: 'var(--coral-light)', tc: 'var(--coral-text)' },
         ];
 
         function Modal({ title, onClose, children }) {
@@ -408,12 +408,9 @@
             </div>;
         }
 
-        function DashCard({ def, data, onUpdate }) {
-            const [items, setItems] = useState(() => data || []);
+        function DashCard({ def, data, onSave, onDel }) {
+            const items = data || [];
             const [modal, setModal] = useState(null);
-            useEffect(() => { onUpdate(items) }, [items]);
-            const save = (f, editId) => { setItems(prev => editId ? prev.map(x => x.id === editId ? { ...x, ...f } : x) : [...prev, { id: uid(), ...f }]) };
-            const del = id => setItems(prev => prev.filter(x => x.id !== id));
             return <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -432,7 +429,7 @@
                             <span style={{ fontSize: 13, fontWeight: 500, color: def.tc, flex: 1, lineHeight: 1.35 }}>{it.title}</span>
                             <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
                                 <button className="icon-btn" onClick={() => setModal({ type: 'edit', item: it })} style={{ color: def.tc, opacity: 0.75 }}>✎</button>
-                                <button className="icon-btn" onClick={() => del(it.id)} style={{ color: 'var(--pink)' }}>✕</button>
+                                <button className="icon-btn" onClick={() => onDel(it.id)} style={{ color: 'var(--pink)' }}>✕</button>
                             </div>
                         </div>
                         {it.description && <p style={{ fontSize: 11, color: def.tc, opacity: 0.7, marginTop: 3, lineHeight: 1.4 }}>{it.description}</p>}
@@ -440,17 +437,14 @@
                     </div>)}
                 </div>
                 {modal && <Modal title={modal.type === 'add' ? `Add — ${def.label}` : 'Edit Item'} onClose={() => setModal(null)}>
-                    <ItemForm item={modal.item} dateField={def.dateField} dateName={def.dateName} onSave={f => save(f, modal.item?.id)} onClose={() => setModal(null)} />
+                    <ItemForm item={modal.item} dateField={def.dateField} dateName={def.dateName} onSave={f => { onSave(f, modal.item?.id); setModal(null); }} onClose={() => setModal(null)} />
                 </Modal>}
             </div>;
         }
 
-        function ProjectSection({ sec, data, onUpdate }) {
-            const [items, setItems] = useState(() => data || []);
+        function ProjectSection({ sec, data, onSave, onDel }) {
+            const items = data || [];
             const [modal, setModal] = useState(null);
-            useEffect(() => { onUpdate(items) }, [items]);
-            const save = (f, editId) => { setItems(prev => editId ? prev.map(x => x.id === editId ? { ...x, ...f } : x) : [...prev, { id: uid(), ...f }]) };
-            const del = id => setItems(prev => prev.filter(x => x.id !== id));
             return <div className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -467,7 +461,7 @@
                             <span style={{ fontSize: 12, fontWeight: 500, color: sec.tc, flex: 1, lineHeight: 1.35 }}>{it.title}</span>
                             <div style={{ display: 'flex', gap: 2, marginLeft: 6 }}>
                                 <button className="icon-btn" onClick={() => setModal({ type: 'edit', item: it })} style={{ color: sec.tc, opacity: 0.8 }}>✎</button>
-                                <button className="icon-btn" onClick={() => del(it.id)} style={{ color: 'var(--pink)' }}>✕</button>
+                                <button className="icon-btn" onClick={() => onDel(it.id)} style={{ color: 'var(--pink)' }}>✕</button>
                             </div>
                         </div>
                         {it.description && <p style={{ fontSize: 11, color: sec.tc, opacity: 0.65, marginTop: 2, lineHeight: 1.4 }}>{it.description}</p>}
@@ -475,16 +469,13 @@
                     </div>)}
                 </div>
                 {modal && <Modal title={modal.type === 'add' ? `Add ${sec.label}` : 'Edit'} onClose={() => setModal(null)}>
-                    <ItemForm item={modal.item} dateField={sec.dateField} dateName={sec.dateName} onSave={f => save(f, modal.item?.id)} onClose={() => setModal(null)} />
+                    <ItemForm item={modal.item} dateField={sec.dateField} dateName={sec.dateName} onSave={f => { onSave(f, modal.item?.id); setModal(null); }} onClose={() => setModal(null)} />
                 </Modal>}
             </div>;
         }
 
-        function ProjectDetail({ project, onBack, onUpdateProject }) {
-            const [sections, setSections] = useState(() => project.sections || {});
-            const updateSec = (key, items) => {
-                setSections(prev => { const n = { ...prev, [key]: items }; onUpdateProject({ ...project, sections: n }); return n });
-            };
+        function ProjectDetail({ project, onBack, saveProjectItem, delProjectItem }) {
+            const sections = project.sections || {};
             const total = Object.values(sections).reduce((s, a) => s + (a?.length || 0), 0);
             return <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 22 }}>
@@ -496,7 +487,7 @@
                     <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text3)', fontWeight: 500 }}>{total} items total</span>
                 </div>
                 <div className="sec-grid">
-                    {PROJ_SECTIONS.map(sec => <ProjectSection key={sec.key} sec={sec} data={sections[sec.key]} onUpdate={items => updateSec(sec.key, items)} />)}
+                    {PROJ_SECTIONS.map(sec => <ProjectSection key={sec.key} sec={sec} data={sections[sec.key]} onSave={(f, editId) => saveProjectItem(project.id, sec.key, f, editId)} onDel={id => delProjectItem(project.id, sec.key, id)} />)}
                 </div>
             </div>;
         }
@@ -504,28 +495,125 @@
         function App() {
             const [view, setView] = useState('dashboard');
             const [activeProject, setActiveProject] = useState(null);
-            const [cardData, setCardData] = useState(() => S.get('vt_cards') || {});
-            const [projects, setProjects] = useState(() => S.get('vt_projects') || [{ id: 'talvorax', name: 'Talvorax', description: 'Default flagship project', sections: {} }]);
+            const [cardData, setCardData] = useState({});
+            const [projects, setProjects] = useState([]);
             const [projModal, setProjModal] = useState(false);
             const [editProj, setEditProj] = useState(null);
+            const [loading, setLoading] = useState(true);
 
-            useEffect(() => { S.set('vt_cards', cardData) }, [cardData]);
-            useEffect(() => { S.set('vt_projects', projects) }, [projects]);
+            useEffect(() => {
+                async function load() {
+                    setLoading(true);
+                    try {
+                        const [dItems, pList, pItems] = await Promise.all([
+                            db.fetch('dashboard_items'),
+                            db.fetch('projects'),
+                            db.fetch('project_items')
+                        ]);
+                        
+                        const cd = {};
+                        dItems.forEach(it => {
+                            if (!cd[it.category]) cd[it.category] = [];
+                            cd[it.category].push(it);
+                        });
+                        setCardData(cd);
 
-            const updateCard = (key, items) => setCardData(prev => ({ ...prev, [key]: items }));
-            const saveProject = (f, editId) => {
-                if (editId) { setProjects(prev => prev.map(p => p.id === editId ? { ...p, ...f } : p)); }
-                else { setProjects(prev => [...prev, { id: uid(), sections: {}, ...f }]); }
+                        const pr = pList.map(p => {
+                            const sections = {};
+                            pItems.filter(i => i.project_id === p.id).forEach(i => {
+                                if (!sections[i.section]) sections[i.section] = [];
+                                sections[i.section].push(i);
+                            });
+                            return { ...p, sections };
+                        });
+                        setProjects(pr);
+                    } catch (err) { console.error(err); }
+                    setLoading(false);
+                }
+                load();
+            }, []);
+
+            const saveCardItem = async (category, f, editId) => {
+                if (editId) {
+                    const res = await db.update('dashboard_items', editId, f);
+                    if (res) {
+                        setCardData(prev => {
+                            const arr = prev[category] || [];
+                            return { ...prev, [category]: arr.map(x => x.id === editId ? res : x) };
+                        });
+                    }
+                } else {
+                    const res = await db.insert('dashboard_items', { ...f, category });
+                    if (res) {
+                        setCardData(prev => ({ ...prev, [category]: [...(prev[category] || []), res] }));
+                    }
+                }
             };
-            const delProject = id => {
+
+            const delCardItem = async (category, id) => {
+                await db.remove('dashboard_items', id);
+                setCardData(prev => ({ ...prev, [category]: (prev[category] || []).filter(x => x.id !== id) }));
+            };
+
+            const saveProjectItem = async (projectId, section, f, editId) => {
+                if (editId) {
+                    const res = await db.update('project_items', editId, f);
+                    if (res) {
+                        setProjects(prev => prev.map(p => {
+                            if (p.id !== projectId) return p;
+                            const arr = p.sections[section] || [];
+                            return { ...p, sections: { ...p.sections, [section]: arr.map(x => x.id === editId ? res : x) } };
+                        }));
+                        if (activeProject && activeProject.id === projectId) {
+                            setActiveProject(prev => {
+                                const arr = prev.sections[section] || [];
+                                return { ...prev, sections: { ...prev.sections, [section]: arr.map(x => x.id === editId ? res : x) } };
+                            });
+                        }
+                    }
+                } else {
+                    const res = await db.insert('project_items', { ...f, section, project_id: projectId });
+                    if (res) {
+                        setProjects(prev => prev.map(p => {
+                            if (p.id !== projectId) return p;
+                            return { ...p, sections: { ...p.sections, [section]: [...(p.sections[section] || []), res] } };
+                        }));
+                        if (activeProject && activeProject.id === projectId) {
+                            setActiveProject(prev => ({ ...prev, sections: { ...prev.sections, [section]: [...(prev.sections[section] || []), res] } }));
+                        }
+                    }
+                }
+            };
+
+            const delProjectItem = async (projectId, section, id) => {
+                await db.remove('project_items', id);
+                setProjects(prev => prev.map(p => {
+                    if (p.id !== projectId) return p;
+                    return { ...p, sections: { ...p.sections, [section]: (p.sections[section] || []).filter(x => x.id !== id) } };
+                }));
+                if (activeProject && activeProject.id === projectId) {
+                    setActiveProject(prev => ({ ...prev, sections: { ...prev.sections, [section]: (prev.sections[section] || []).filter(x => x.id !== id) } }));
+                }
+            };
+
+            const saveProject = async (f, editId) => {
+                if (editId) { 
+                    const res = await db.update('projects', editId, f);
+                    if (res) setProjects(prev => prev.map(p => p.id === editId ? { ...p, ...res } : p)); 
+                } else { 
+                    const res = await db.insert('projects', f);
+                    if (res) setProjects(prev => [...prev, { sections: {}, ...res }]); 
+                }
+            };
+
+            const delProject = async id => {
                 if (!confirm('Delete this project?')) return;
+                await db.remove('projects', id);
                 setProjects(prev => prev.filter(p => p.id !== id));
                 if (activeProject?.id === id) setView('projects');
             };
-            const updateProject = updated => setProjects(prev => prev.map(p => p.id === updated.id ? updated : p));
-            const openProject = p => { setActiveProject(p); setView('project') };
-            const handleUpdateProject = updated => { updateProject(updated); setActiveProject(updated) };
 
+            const openProject = p => { setActiveProject(p); setView('project') };
             const navTo = v => { setView(v) };
 
             return <div>
@@ -543,57 +631,59 @@
                 </nav>
 
                 <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
-                    {view === 'dashboard' && <>
-                        <div style={{ marginBottom: 22 }}>
-                            <h1 className="page-title">Dashboard</h1>
-                            <p className="page-sub">Manage your marketing, ideas, clients, and more</p>
-                        </div>
-                        <div className="dash-grid">
-                            {CARD_DEFS.map(def => <DashCard key={def.key} def={def} data={cardData[def.key]} onUpdate={items => updateCard(def.key, items)} />)}
-                        </div>
-                    </>}
-
-                    {view === 'projects' && <>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
-                            <div>
-                                <h1 className="page-title">Projects Managed by Vexa Trion</h1>
-                                <p className="page-sub">{projects.length} project{projects.length !== 1 ? 's' : ''}</p>
+                    {loading ? <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--text3)' }}>Loading data...</div> : <>
+                        {view === 'dashboard' && <>
+                            <div style={{ marginBottom: 22 }}>
+                                <h1 className="page-title">Dashboard</h1>
+                                <p className="page-sub">Manage your marketing, ideas, clients, and more</p>
                             </div>
-                            <button className="btn-primary" onClick={() => { setEditProj(null); setProjModal(true) }}>+ New Project</button>
-                        </div>
-                        {projects.length === 0 && <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-                            <p style={{ color: 'var(--text3)', fontSize: 14 }}>No projects yet — create your first one!</p>
-                        </div>}
-                        <div className="proj-grid">
-                            {projects.map(p => {
-                                const total = Object.values(p.sections || {}).reduce((s, a) => s + (a?.length || 0), 0);
-                                const initials = p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-                                return <div key={p.id} className="card" style={{ cursor: 'pointer' }}
-                                    onClick={() => openProject(p)}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--purple)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(108,92,231,0.12)' }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--purple-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: 'var(--purple-text)', fontFamily: 'Syne,sans-serif' }}>{initials}</div>
-                                        <div style={{ display: 'flex', gap: 2 }} onClick={e => e.stopPropagation()}>
-                                            <button className="icon-btn" onClick={e => { e.stopPropagation(); setEditProj(p); setProjModal(true) }} style={{ color: 'var(--text2)' }}>✎</button>
-                                            <button className="icon-btn" onClick={e => { e.stopPropagation(); delProject(p.id) }} style={{ color: 'var(--pink)' }}>✕</button>
-                                        </div>
-                                    </div>
-                                    <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 4, fontFamily: 'Syne,sans-serif' }}>{p.name}</h3>
-                                    {p.description && <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10, lineHeight: 1.5 }}>{p.description}</p>}
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
-                                        {PROJ_SECTIONS.map(s => { const cnt = (p.sections?.[s.key] || []).length; return cnt > 0 && <span key={s.key} className="pill" style={{ background: s.bg, color: s.tc }}>{s.label}: {cnt}</span> })}
-                                        {total === 0 && <span style={{ fontSize: 11, color: 'var(--text3)' }}>No items yet — click to add</span>}
-                                    </div>
-                                </div>;
-                            })}
-                        </div>
-                        {projModal && <Modal title={editProj ? 'Edit Project' : 'New Project'} onClose={() => { setProjModal(false); setEditProj(null) }}>
-                            <ProjectForm proj={editProj} onSave={f => { saveProject(f, editProj?.id); setProjModal(false); setEditProj(null) }} onClose={() => { setProjModal(false); setEditProj(null) }} />
-                        </Modal>}
-                    </>}
+                            <div className="dash-grid">
+                                {CARD_DEFS.map(def => <DashCard key={def.key} def={def} data={cardData[def.key]} onSave={(f, editId) => saveCardItem(def.key, f, editId)} onDel={id => delCardItem(def.key, id)} />)}
+                            </div>
+                        </>}
 
-                    {view === 'project' && activeProject && <ProjectDetail project={activeProject} onBack={() => setView('projects')} onUpdateProject={handleUpdateProject} />}
+                        {view === 'projects' && <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
+                                <div>
+                                    <h1 className="page-title">Projects Managed by Vexa Trion</h1>
+                                    <p className="page-sub">{projects.length} project{projects.length !== 1 ? 's' : ''}</p>
+                                </div>
+                                <button className="btn-primary" onClick={() => { setEditProj(null); setProjModal(true) }}>+ New Project</button>
+                            </div>
+                            {projects.length === 0 && <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+                                <p style={{ color: 'var(--text3)', fontSize: 14 }}>No projects yet — create your first one!</p>
+                            </div>}
+                            <div className="proj-grid">
+                                {projects.map(p => {
+                                    const total = Object.values(p.sections || {}).reduce((s, a) => s + (a?.length || 0), 0);
+                                    const initials = p.name ? p.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'P';
+                                    return <div key={p.id} className="card" style={{ cursor: 'pointer' }}
+                                        onClick={() => openProject(p)}
+                                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--purple)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(108,92,231,0.12)' }}
+                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                                            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--purple-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: 'var(--purple-text)', fontFamily: 'Syne,sans-serif' }}>{initials}</div>
+                                            <div style={{ display: 'flex', gap: 2 }} onClick={e => e.stopPropagation()}>
+                                                <button className="icon-btn" onClick={e => { e.stopPropagation(); setEditProj(p); setProjModal(true) }} style={{ color: 'var(--text2)' }}>✎</button>
+                                                <button className="icon-btn" onClick={e => { e.stopPropagation(); delProject(p.id) }} style={{ color: 'var(--pink)' }}>✕</button>
+                                            </div>
+                                        </div>
+                                        <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 4, fontFamily: 'Syne,sans-serif' }}>{p.name}</h3>
+                                        {p.description && <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10, lineHeight: 1.5 }}>{p.description}</p>}
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
+                                            {PROJ_SECTIONS.map(s => { const cnt = (p.sections?.[s.key] || []).length; return cnt > 0 && <span key={s.key} className="pill" style={{ background: s.bg, color: s.tc }}>{s.label}: {cnt}</span> })}
+                                            {total === 0 && <span style={{ fontSize: 11, color: 'var(--text3)' }}>No items yet — click to add</span>}
+                                        </div>
+                                    </div>;
+                                })}
+                            </div>
+                            {projModal && <Modal title={editProj ? 'Edit Project' : 'New Project'} onClose={() => { setProjModal(false); setEditProj(null) }}>
+                                <ProjectForm proj={editProj} onSave={f => { saveProject(f, editProj?.id); setProjModal(false); setEditProj(null) }} onClose={() => { setProjModal(false); setEditProj(null) }} />
+                            </Modal>}
+                        </>}
+
+                        {view === 'project' && activeProject && <ProjectDetail project={activeProject} onBack={() => setView('projects')} saveProjectItem={saveProjectItem} delProjectItem={delProjectItem} />}
+                    </>}
                 </div>
             </div>;
         }
