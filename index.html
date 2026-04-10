@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>Vexa Trion</title>
+    <title>Vecsa Trion</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
@@ -335,6 +335,7 @@
         const fmt = d => { if (!d) return '—'; const dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) };
 
         const CARD_DEFS = [
+            { key: 'tasks', label: 'Tasks', color: 'var(--blue)', bg: 'var(--blue-light)', tc: 'var(--blue-text)', dateField: 'date_value', dateName: 'Deadline' },
             { key: 'marketing_ideas', label: 'Marketing Ideas', color: 'var(--purple)', bg: 'var(--purple-light)', tc: 'var(--purple-text)', dateField: 'date_value', dateName: 'Scheduled Date' },
             { key: 'completed_tasks', label: 'Completed Marketing Tasks', color: 'var(--green)', bg: 'var(--green-light)', tc: 'var(--green-text)', dateField: 'date_value', dateName: 'Completed Date' },
             { key: 'portfolio', label: 'Portfolio', color: 'var(--coral)', bg: 'var(--coral-light)', tc: 'var(--coral-text)' },
@@ -422,7 +423,7 @@
             </div>;
         }
 
-        function DashCard({ def, data, onSave, onDel }) {
+        function DashCard({ def, data, onSave, onDel, onComplete }) {
             const items = data || [];
             const [modal, setModal] = useState(null);
             return <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -442,6 +443,9 @@
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
                             <span style={{ fontSize: 13, fontWeight: 500, color: def.tc, flex: 1, lineHeight: 1.35 }}>{it.title}</span>
                             <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                                {!def.key.startsWith('completed_') && def.key !== 'completed_tasks' && onComplete && (
+                                    <button className="icon-btn" onClick={() => onComplete(it)} style={{ color: def.tc, opacity: 0.8 }} title="Complete">✓</button>
+                                )}
                                 <button className="icon-btn" onClick={() => setModal({ type: 'edit', item: it })} style={{ color: def.tc, opacity: 0.75 }}>✎</button>
                                 <button className="icon-btn" onClick={() => onDel(it.id)} style={{ color: 'var(--pink)' }}>✕</button>
                             </div>
@@ -456,7 +460,7 @@
             </div>;
         }
 
-        function ProjectSection({ sec, data, onSave, onDel }) {
+        function ProjectSection({ sec, data, onSave, onDel, onComplete }) {
             const items = data || [];
             const [modal, setModal] = useState(null);
             return <div className="card">
@@ -474,6 +478,9 @@
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <span style={{ fontSize: 12, fontWeight: 500, color: sec.tc, flex: 1, lineHeight: 1.35 }}>{it.title}</span>
                             <div style={{ display: 'flex', gap: 2, marginLeft: 6 }}>
+                                {!sec.key.startsWith('completed_') && onComplete && (
+                                    <button className="icon-btn" onClick={() => onComplete(it)} style={{ color: sec.tc, opacity: 0.8 }} title="Complete">✓</button>
+                                )}
                                 <button className="icon-btn" onClick={() => setModal({ type: 'edit', item: it })} style={{ color: sec.tc, opacity: 0.8 }}>✎</button>
                                 <button className="icon-btn" onClick={() => onDel(it.id)} style={{ color: 'var(--pink)' }}>✕</button>
                             </div>
@@ -488,7 +495,7 @@
             </div>;
         }
 
-        function ProjectDetail({ project, onBack, saveProjectItem, delProjectItem }) {
+        function ProjectDetail({ project, onBack, saveProjectItem, delProjectItem, completeProjectItem }) {
             const sections = project.sections || {};
             const total = Object.values(sections).reduce((s, a) => s + (a?.length || 0), 0);
             return <div>
@@ -501,8 +508,20 @@
                     <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text3)', fontWeight: 500 }}>{total} items total</span>
                 </div>
                 <div className="sec-grid">
-                    {PROJ_SECTIONS.map(sec => <ProjectSection key={sec.key} sec={sec} data={sections[sec.key]} onSave={(f, editId) => saveProjectItem(project.id, sec.key, f, editId)} onDel={id => delProjectItem(project.id, sec.key, id)} />)}
+                    {PROJ_SECTIONS.map(sec => <ProjectSection key={sec.key} sec={sec} data={sections[sec.key]} onSave={(f, editId) => saveProjectItem(project.id, sec.key, f, editId)} onDel={id => delProjectItem(project.id, sec.key, id)} onComplete={it => completeProjectItem(project.id, sec.key, it)} />)}
                 </div>
+                {Object.keys(sections).some(k => k.startsWith('completed_') && sections[k].length > 0) && (
+                    <div style={{ marginTop: 40 }}>
+                        <h2 className="page-title" style={{ fontSize: 18, marginBottom: 16 }}>Completed Items</h2>
+                        <div className="sec-grid">
+                            {PROJ_SECTIONS.map(sec => {
+                                const k = 'completed_' + sec.key;
+                                if (!sections[k] || sections[k].length === 0) return null;
+                                return <ProjectSection key={k} sec={{ ...sec, key: k, label: 'Completed ' + sec.label }} data={sections[k]} onSave={(f, editId) => saveProjectItem(project.id, k, f, editId)} onDel={id => delProjectItem(project.id, k, id)} />;
+                            })}
+                        </div>
+                    </div>
+                )}
             </div>;
         }
 
@@ -569,6 +588,19 @@
                 setCardData(prev => ({ ...prev, [category]: (prev[category] || []).filter(x => x.id !== id) }));
             };
 
+            const completeCardItem = async (category, it) => {
+                const newCat = 'completed_' + category;
+                const res = await db.update('dashboard_items', it.id, { category: newCat });
+                if (res) {
+                    setCardData(prev => {
+                        const st = { ...prev };
+                        st[category] = (st[category] || []).filter(x => x.id !== it.id);
+                        st[newCat] = [...(st[newCat] || []), res];
+                        return st;
+                    });
+                }
+            };
+
             const saveProjectItem = async (projectId, section, f, editId) => {
                 if (editId) {
                     const res = await db.update('project_items', editId, f);
@@ -610,6 +642,34 @@
                 }
             };
 
+            const completeProjectItem = async (projectId, section, it) => {
+                const newSec = 'completed_' + section;
+                const res = await db.update('project_items', it.id, { section: newSec });
+                if (res) {
+                    setProjects(prev => prev.map(p => {
+                        if (p.id !== projectId) return p;
+                        return {
+                            ...p,
+                            sections: {
+                                ...p.sections,
+                                [section]: (p.sections[section] || []).filter(x => x.id !== it.id),
+                                [newSec]: [...(p.sections[newSec] || []), res]
+                            }
+                        };
+                    }));
+                    if (activeProject && activeProject.id === projectId) {
+                        setActiveProject(prev => ({
+                            ...prev,
+                            sections: {
+                                ...prev.sections,
+                                [section]: (prev.sections[section] || []).filter(x => x.id !== it.id),
+                                [newSec]: [...(prev.sections[newSec] || []), res]
+                            }
+                        }));
+                    }
+                }
+            };
+
             const saveProject = async (f, editId) => {
                 if (editId) { 
                     const res = await db.update('projects', editId, f);
@@ -636,7 +696,7 @@
                         <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,var(--purple),var(--rose))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <span style={{ color: '#fff', fontSize: 15, fontFamily: 'Syne,sans-serif', fontWeight: 700 }}>V</span>
                         </div>
-                        <span style={{ fontSize: 17, fontWeight: 700, fontFamily: 'Syne,sans-serif', color: 'var(--text)', letterSpacing: '-0.3px' }}>Vexa Trion</span>
+                        <span style={{ fontSize: 17, fontWeight: 700, fontFamily: 'Syne,sans-serif', color: 'var(--text)', letterSpacing: '-0.3px' }}>Vecsa Trion</span>
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
                         <button className={`nav-btn${view === 'dashboard' ? ' active' : ''}`} onClick={() => navTo('dashboard')}>Dashboard</button>
@@ -652,14 +712,28 @@
                                 <p className="page-sub">Manage your marketing, ideas, clients, and more</p>
                             </div>
                             <div className="dash-grid">
-                                {CARD_DEFS.map(def => <DashCard key={def.key} def={def} data={cardData[def.key]} onSave={(f, editId) => saveCardItem(def.key, f, editId)} onDel={id => delCardItem(def.key, id)} />)}
+                                {CARD_DEFS.map(def => <DashCard key={def.key} def={def} data={cardData[def.key]} onSave={(f, editId) => saveCardItem(def.key, f, editId)} onDel={id => delCardItem(def.key, id)} onComplete={it => completeCardItem(def.key, it)} />)}
                             </div>
+
+                            {Object.keys(cardData).some(k => k.startsWith('completed_') && k !== 'completed_tasks' && cardData[k].length > 0) && (
+                                <div style={{ marginTop: 40 }}>
+                                    <h2 className="page-title" style={{ fontSize: 18, marginBottom: 16 }}>Completed Items</h2>
+                                    <div className="dash-grid">
+                                        {CARD_DEFS.map(def => {
+                                            if (def.key === 'completed_tasks') return null;
+                                            const k = 'completed_' + def.key;
+                                            if (!cardData[k] || cardData[k].length === 0) return null;
+                                            return <DashCard key={k} def={{ ...def, key: k, label: 'Completed ' + def.label }} data={cardData[k]} onSave={(f, editId) => saveCardItem(k, f, editId)} onDel={id => delCardItem(k, id)} />;
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </>}
 
                         {view === 'projects' && <>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
                                 <div>
-                                    <h1 className="page-title">Projects Managed by Vexa Trion</h1>
+                                    <h1 className="page-title">Projects Managed by Vecsa Trion</h1>
                                     <p className="page-sub">{projects.length} project{projects.length !== 1 ? 's' : ''}</p>
                                 </div>
                                 <button className="btn-primary" onClick={() => { setEditProj(null); setProjModal(true) }}>+ New Project</button>
@@ -696,7 +770,7 @@
                             </Modal>}
                         </>}
 
-                        {view === 'project' && activeProject && <ProjectDetail project={activeProject} onBack={() => setView('projects')} saveProjectItem={saveProjectItem} delProjectItem={delProjectItem} />}
+                        {view === 'project' && activeProject && <ProjectDetail project={activeProject} onBack={() => setView('projects')} saveProjectItem={saveProjectItem} delProjectItem={delProjectItem} completeProjectItem={completeProjectItem} />}
                     </>}
                 </div>
             </div>;
