@@ -356,6 +356,54 @@
             { key: 'bugs', label: 'Bugs', dateField: 'date_value', dateName: 'Solved Date', color: 'var(--coral)', bg: 'var(--coral-light)', tc: 'var(--coral-text)' },
         ];
 
+        const COLORS = [
+            { color: 'var(--purple)', bg: 'var(--purple-light)', tc: 'var(--purple-text)' },
+            { color: 'var(--green)', bg: 'var(--green-light)', tc: 'var(--green-text)' },
+            { color: 'var(--coral)', bg: 'var(--coral-light)', tc: 'var(--coral-text)' },
+            { color: 'var(--pink)', bg: 'var(--pink-light)', tc: 'var(--pink-text)' },
+            { color: 'var(--blue)', bg: 'var(--blue-light)', tc: 'var(--blue-text)' },
+            { color: 'var(--lime)', bg: 'var(--lime-light)', tc: 'var(--lime-text)' },
+            { color: 'var(--amber)', bg: 'var(--amber-light)', tc: 'var(--amber-text)' },
+            { color: 'var(--teal)', bg: 'var(--teal-light)', tc: 'var(--teal-text)' },
+            { color: 'var(--rose)', bg: 'var(--rose-light)', tc: 'var(--rose-text)' }
+        ];
+
+        function DeleteConfirmModal({ title, expectedName, onConfirm, onClose }) {
+            const [input, setInput] = useState('');
+            return <Modal title={title} onClose={onClose}>
+                <p style={{marginBottom: 10, fontSize: 13, color: 'var(--text2)', lineHeight: 1.5}}>
+                    Are you sure you want to delete? Please type <strong style={{color: 'var(--text)'}}>{expectedName}</strong> to confirm.
+                </p>
+                <div className="field-group">
+                    <input value={input} onChange={e => setInput(e.target.value)} placeholder={expectedName} autoFocus />
+                </div>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+                    <button className="btn-ghost" onClick={onClose}>Cancel</button>
+                    <button className="btn-primary" style={{ background: 'var(--pink)' }} disabled={input !== expectedName} onClick={() => {
+                        if (input === expectedName) onConfirm();
+                    }}>Delete</button>
+                </div>
+            </Modal>;
+        }
+
+        function AddCardModal({ title, onSave, onClose }) {
+            const [name, setName] = useState('');
+            return <Modal title={title} onClose={onClose}>
+                <div className="field-group">
+                    <label className="field-label">Card Name *</label>
+                    <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. New Feature" autoFocus onKeyDown={e => {
+                        if(e.key === 'Enter' && name.trim()) { onSave(name.trim()); onClose(); }
+                    }}/>
+                </div>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+                    <button className="btn-ghost" onClick={onClose}>Cancel</button>
+                    <button className="btn-primary" onClick={() => {
+                        if(name.trim()) { onSave(name.trim()); onClose(); }
+                    }}>Add</button>
+                </div>
+            </Modal>;
+        }
+
         function Modal({ title, onClose, children }) {
             return <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
                 <div className="modal">
@@ -423,7 +471,7 @@
             </div>;
         }
 
-        function DashCard({ def, data, onSave, onDel, onComplete }) {
+        function DashCard({ def, data, onSave, onDel, onComplete, onDelCard }) {
             const items = data || [];
             const [modal, setModal] = useState(null);
             return <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -435,6 +483,7 @@
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 500 }}>{items.length}</span>
                         <button onClick={() => setModal({ type: 'add' })} style={{ background: def.bg, color: def.tc, padding: '3px 9px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>+ Add</button>
+                        {onDelCard && <button onClick={() => onDelCard(def)} className="icon-btn" style={{ color: 'var(--pink)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24 }} title="Delete Card">✕</button>}
                     </div>
                 </div>
                 {items.length === 0 && <p className="empty">No items yet</p>}
@@ -460,7 +509,7 @@
             </div>;
         }
 
-        function ProjectSection({ sec, data, onSave, onDel, onComplete }) {
+        function ProjectSection({ sec, data, onSave, onDel, onComplete, onDelCard }) {
             const items = data || [];
             const [modal, setModal] = useState(null);
             return <div className="card">
@@ -470,7 +519,10 @@
                         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{sec.label}</span>
                         <span style={{ fontSize: 11, color: 'var(--text3)' }}>({items.length})</span>
                     </div>
-                    <button onClick={() => setModal({ type: 'add' })} style={{ background: sec.bg, color: sec.tc, padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>+ Add</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <button onClick={() => setModal({ type: 'add' })} style={{ background: sec.bg, color: sec.tc, padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>+ Add</button>
+                        {onDelCard && <button onClick={() => onDelCard(sec)} className="icon-btn" style={{ color: 'var(--pink)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24 }} title="Delete Section">✕</button>}
+                    </div>
                 </div>
                 {items.length === 0 && <p className="empty">Empty</p>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -495,7 +547,7 @@
             </div>;
         }
 
-        function ProjectDetail({ project, onBack, saveProjectItem, delProjectItem, completeProjectItem }) {
+        function ProjectDetail({ project, projSecsDef, onBack, saveProjectItem, delProjectItem, completeProjectItem, setDelCardPrompt, setAddCardModal }) {
             const sections = project.sections || {};
             const total = Object.values(sections).reduce((s, a) => s + (a?.length || 0), 0);
             return <div>
@@ -505,16 +557,19 @@
                         <h1 className="page-title">{project.name}</h1>
                         {project.description && <p className="page-sub">{project.description}</p>}
                     </div>
-                    <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text3)', fontWeight: 500 }}>{total} items total</span>
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 500 }}>{total} items total</span>
+                        <button className="btn-primary" onClick={() => setAddCardModal('project')}>+ Add Card</button>
+                    </div>
                 </div>
                 <div className="sec-grid">
-                    {PROJ_SECTIONS.map(sec => <ProjectSection key={sec.key} sec={sec} data={sections[sec.key]} onSave={(f, editId) => saveProjectItem(project.id, sec.key, f, editId)} onDel={id => delProjectItem(project.id, sec.key, id)} onComplete={it => completeProjectItem(project.id, sec.key, it)} />)}
+                    {projSecsDef.map(sec => <ProjectSection key={sec.key} sec={sec} data={sections[sec.key]} onSave={(f, editId) => saveProjectItem(project.id, sec.key, f, editId)} onDel={id => delProjectItem(project.id, sec.key, id)} onComplete={it => completeProjectItem(project.id, sec.key, it)} onDelCard={() => setDelCardPrompt({type: 'project', item: sec})} />)}
                 </div>
                 {Object.keys(sections).some(k => k.startsWith('completed_') && sections[k].length > 0) && (
                     <div style={{ marginTop: 40 }}>
                         <h2 className="page-title" style={{ fontSize: 18, marginBottom: 16 }}>Completed Items</h2>
                         <div className="sec-grid">
-                            {PROJ_SECTIONS.map(sec => {
+                            {projSecsDef.map(sec => {
                                 const k = 'completed_' + sec.key;
                                 if (!sections[k] || sections[k].length === 0) return null;
                                 return <ProjectSection key={k} sec={{ ...sec, key: k, label: 'Completed ' + sec.label }} data={sections[k]} onSave={(f, editId) => saveProjectItem(project.id, k, f, editId)} onDel={id => delProjectItem(project.id, k, id)} />;
@@ -533,6 +588,14 @@
             const [projModal, setProjModal] = useState(false);
             const [editProj, setEditProj] = useState(null);
             const [loading, setLoading] = useState(true);
+
+            // Dynamic Cards state
+            const [dashCardsDef, setDashCardsDef] = useState(() => S.get('vt_dash_cards') || CARD_DEFS);
+            const [projSecsDef, setProjSecsDef] = useState(() => S.get('vt_proj_secs') || PROJ_SECTIONS);
+            
+            // Modals state
+            const [addCardModal, setAddCardModal] = useState(null); // 'dashboard' | 'project'
+            const [delCardPrompt, setDelCardPrompt] = useState(null); // { type, item }
 
             useEffect(() => {
                 async function load() {
@@ -687,6 +750,34 @@
                 if (activeProject?.id === id) setView('projects');
             };
 
+            const handleAddCard = (name) => {
+                const style = COLORS[Math.floor(Math.random() * COLORS.length)];
+                if (addCardModal === 'dashboard') {
+                    const newDef = { key: 'custom_dash_' + Date.now(), label: name, dateField: 'date_value', dateName: 'Date', ...style };
+                    const next = [...dashCardsDef, newDef];
+                    setDashCardsDef(next);
+                    S.set('vt_dash_cards', next);
+                } else if (addCardModal === 'project') {
+                    const newDef = { key: 'custom_proj_' + Date.now(), label: name, dateField: 'date_value', dateName: 'Date', ...style };
+                    const next = [...projSecsDef, newDef];
+                    setProjSecsDef(next);
+                    S.set('vt_proj_secs', next);
+                }
+            };
+
+            const handleConfirmDelCard = () => {
+                if (delCardPrompt.type === 'dashboard') {
+                    const next = dashCardsDef.filter(c => c.key !== delCardPrompt.item.key);
+                    setDashCardsDef(next);
+                    S.set('vt_dash_cards', next);
+                } else if (delCardPrompt.type === 'project') {
+                    const next = projSecsDef.filter(c => c.key !== delCardPrompt.item.key);
+                    setProjSecsDef(next);
+                    S.set('vt_proj_secs', next);
+                }
+                setDelCardPrompt(null);
+            };
+
             const openProject = p => { setActiveProject(p); setView('project') };
             const navTo = v => { setView(v) };
 
@@ -707,19 +798,22 @@
                 <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
                     {loading ? <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--text3)' }}>Loading data...</div> : <>
                         {view === 'dashboard' && <>
-                            <div style={{ marginBottom: 22 }}>
-                                <h1 className="page-title">Dashboard</h1>
-                                <p className="page-sub">Manage your marketing, ideas, clients, and more</p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
+                                <div>
+                                    <h1 className="page-title">Dashboard</h1>
+                                    <p className="page-sub">Manage your marketing, ideas, clients, and more</p>
+                                </div>
+                                <button className="btn-primary" onClick={() => setAddCardModal('dashboard')}>+ Add Card</button>
                             </div>
                             <div className="dash-grid">
-                                {CARD_DEFS.map(def => <DashCard key={def.key} def={def} data={cardData[def.key]} onSave={(f, editId) => saveCardItem(def.key, f, editId)} onDel={id => delCardItem(def.key, id)} onComplete={it => completeCardItem(def.key, it)} />)}
+                                {dashCardsDef.map(def => <DashCard key={def.key} def={def} data={cardData[def.key]} onSave={(f, editId) => saveCardItem(def.key, f, editId)} onDel={id => delCardItem(def.key, id)} onComplete={it => completeCardItem(def.key, it)} onDelCard={() => setDelCardPrompt({type: 'dashboard', item: def})} />)}
                             </div>
 
                             {Object.keys(cardData).some(k => k.startsWith('completed_') && k !== 'completed_tasks' && cardData[k].length > 0) && (
                                 <div style={{ marginTop: 40 }}>
                                     <h2 className="page-title" style={{ fontSize: 18, marginBottom: 16 }}>Completed Items</h2>
                                     <div className="dash-grid">
-                                        {CARD_DEFS.map(def => {
+                                        {dashCardsDef.map(def => {
                                             if (def.key === 'completed_tasks') return null;
                                             const k = 'completed_' + def.key;
                                             if (!cardData[k] || cardData[k].length === 0) return null;
@@ -759,7 +853,7 @@
                                         <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 4, fontFamily: 'Syne,sans-serif' }}>{p.name}</h3>
                                         {p.description && <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10, lineHeight: 1.5 }}>{p.description}</p>}
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
-                                            {PROJ_SECTIONS.map(s => { const cnt = (p.sections?.[s.key] || []).length; return cnt > 0 && <span key={s.key} className="pill" style={{ background: s.bg, color: s.tc }}>{s.label}: {cnt}</span> })}
+                                            {projSecsDef.map(s => { const cnt = (p.sections?.[s.key] || []).length; return cnt > 0 && <span key={s.key} className="pill" style={{ background: s.bg, color: s.tc }}>{s.label}: {cnt}</span> })}
                                             {total === 0 && <span style={{ fontSize: 11, color: 'var(--text3)' }}>No items yet — click to add</span>}
                                         </div>
                                     </div>;
@@ -770,7 +864,10 @@
                             </Modal>}
                         </>}
 
-                        {view === 'project' && activeProject && <ProjectDetail project={activeProject} onBack={() => setView('projects')} saveProjectItem={saveProjectItem} delProjectItem={delProjectItem} completeProjectItem={completeProjectItem} />}
+                        {view === 'project' && activeProject && <ProjectDetail project={activeProject} projSecsDef={projSecsDef} onBack={() => setView('projects')} saveProjectItem={saveProjectItem} delProjectItem={delProjectItem} completeProjectItem={completeProjectItem} setDelCardPrompt={setDelCardPrompt} setAddCardModal={setAddCardModal} />}
+
+                        {addCardModal && <AddCardModal title={`New ${addCardModal === 'dashboard' ? 'Dashboard' : 'Project'} Card`} onSave={handleAddCard} onClose={() => setAddCardModal(null)} />}
+                        {delCardPrompt && <DeleteConfirmModal title="Delete Card" expectedName={delCardPrompt.item.label} onConfirm={handleConfirmDelCard} onClose={() => setDelCardPrompt(null)} />}
                     </>}
                 </div>
             </div>;
