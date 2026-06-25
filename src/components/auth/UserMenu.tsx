@@ -40,6 +40,15 @@ export function UserMenu() {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      {user?.email === 'bethahemanth7264@gmail.com' && (
+        <button
+          onClick={() => navigate('/admin/approvals')}
+          className="btn-secondary"
+          style={{ padding: '6px 12px', fontSize: 13, marginRight: 8 }}
+        >
+          Approvals
+        </button>
+      )}
       <div style={{ textAlign: 'right' }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
           {profileName || 'User'}

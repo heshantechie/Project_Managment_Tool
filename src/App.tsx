@@ -5,6 +5,8 @@ import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { ForgotPasswordForm } from './components/auth/ForgotPasswordForm';
 import { ResetPasswordForm } from './components/auth/ResetPasswordForm';
+import { AdminRoute } from './components/auth/AdminRoute';
+import { UserApprovals } from './components/admin/UserApprovals';
 import Dashboard from './Dashboard';
 
 function App() {
@@ -23,6 +25,11 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             {/* Redirect root to dashboard */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Route>
+
+          {/* Admin Routes */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/approvals" element={<UserApprovals />} />
           </Route>
 
           {/* Fallback */}
