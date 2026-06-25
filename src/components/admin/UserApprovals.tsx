@@ -32,8 +32,8 @@ export function UserApprovals() {
 
       if (error) throw error;
       setRegistrations(data || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch registrations');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch registrations');
     } finally {
       setLoading(false);
     }
@@ -52,8 +52,8 @@ export function UserApprovals() {
       }
 
       await fetchRegistrations();
-    } catch (err: any) {
-      alert(err.message || `Failed to ${action} user`);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : `Failed to ${action} user`);
     } finally {
       setProcessingId(null);
     }

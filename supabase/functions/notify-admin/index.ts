@@ -25,8 +25,8 @@ serve(async (req) => {
       status: 200,
     })
 
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       headers: { 'Content-Type': 'application/json' },
       status: 400,
     })
